@@ -1,0 +1,4 @@
+# files to be ignored by git
+./.vagrant
+./id_rsa
+./id_rsa.pub
