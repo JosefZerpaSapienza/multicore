@@ -5,7 +5,7 @@
 
 int main (void) 
 {
-    char txt[] = "ABABDABACDABABCABAB";
+    char txt[] = "CABABDABACDABABCABABCABABBABAABBABABABCABAB";
     char pat[] = "ABABCABAB";
     int m = strlen(pat);
     int n = strlen(txt);
@@ -17,7 +17,6 @@ int main (void)
     i = KMPSearch(pat, m, txt, n, lps);
     if (i == -1) {
        printf("No match found.\n");
-       return 0;
     } else {
       printf("Pattern found at index: %d.\n", i);
     }
