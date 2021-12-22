@@ -9,19 +9,19 @@ int main (void)
     char pat[] = "ABABCABAB";
     int m = strlen(pat);
     int n = strlen(txt);
-    int *matches = malloc(sizeof(int) * n);
-    int c;
+    int i;
+    int *lps = malloc(sizeof(int) * m);
 
-    c = KMPSearch(pat, m, txt, n, matches, n);
-    if (c == -1) {
-       printf("Error: Matches array too small!\n");
-       return -1;
+    computeLPS(pat, m, lps);
+
+    i = KMPSearch(pat, m, txt, n, lps);
+    if (i == -1) {
+       printf("No match found.\n");
+       return 0;
+    } else {
+      printf("Pattern found at index: %d.\n", i);
     }
 
-    for (int i = 0; i < c; i++) {
-        printf("%d\n", matches[i]);
-    }
-
-    free(matches);
+    free(lps);
     return 0;
 }

@@ -1,29 +1,17 @@
 // Adapted from: 
 // https://www.geeksforgeeks.org/kmp-algorithm-for-pattern-searching/
 //
-// C++ program for implementation of KMP pattern searching
+// C program for implementation of KMP pattern searching
 // algorithm
 //
-#include <stdlib.h>
   
-void computeLPSArray(char* pat, int M, int* lps);
-
 // Fills a given array of int, with indexes where matches
 // of pat[] are found in txt[].
 // Returns -1 on failure, the count of matches on success.
 // pat: pattern string; m: its size
 // txt: text string; n: its size
-// matches: array of indexes of matches, l: its size
-int KMPSearch(char* pat, int m, char* txt, int n, int* matches, int l)
+int KMPSearch(char* pat, int m, char* txt, int n, int *lps)
 {
-    // create lps[] that will hold the longest prefix suffix
-    // values for pattern
-    int *lps = malloc(sizeof(int) * m);
-    int c = 0;
-  
-    // Preprocess the pattern (calculate lps[] array)
-    computeLPSArray(pat, m, lps);
-  
     int i = 0; // index for txt[]
     int j = 0; // index for pat[]
     while (i < n) {
@@ -33,11 +21,8 @@ int KMPSearch(char* pat, int m, char* txt, int n, int* matches, int l)
         }
   
         if (j == m) {
-	    if (c < l) {
-	        matches[c++] = i - j;
-            } else { // matches array is full
-	        return -1;
-	    }
+            return i - j;
+
             j = lps[j - 1];
         }
   
@@ -53,11 +38,11 @@ int KMPSearch(char* pat, int m, char* txt, int n, int* matches, int l)
     }
 
     free(lps);
-    return c;
+    return -1;
 }
   
 // Fills lps[] for given patttern pat[0..M-1]
-void computeLPSArray(char* pat, int M, int* lps)
+void computeLPS(char* pat, int M, int* lps)
 {
     // length of the previous longest prefix suffix
     int len = 0;
