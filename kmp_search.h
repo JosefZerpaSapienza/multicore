@@ -50,6 +50,8 @@ int KMPsearch(char* pat, int m, char* txt, int n, int *lps)
 {
     int i = 0; // index for txt[]
     int j = 0; // index for pat[]
+    int match;
+
     while (i < n) {
         if (pat[j] == txt[i]) {
             j++;
@@ -57,9 +59,10 @@ int KMPsearch(char* pat, int m, char* txt, int n, int *lps)
         }
   
         if (j == m) {
-            return i - j;
-
+            match = i - j;
             j = lps[j - 1];
+
+	    return match;
         }
   
         // mismatch after j matches
@@ -73,7 +76,6 @@ int KMPsearch(char* pat, int m, char* txt, int n, int *lps)
         }
     }
 
-    free(lps);
     return -1;
 }
 
