@@ -46,31 +46,31 @@ void computeLPS(char* pat, int M, int* lps)
 // pat: pattern string; m: its size
 // txt: text string; n: its size
 // lps: the lps array
-int KMPsearch(char* pat, int m, char* txt, int n, int *lps)
+int KMPsearch(char* pat, int m, char* txt, int n, int *lps, int *j)
 {
     int i = 0; // index for txt[]
-    int j = 0; // index for pat[]
+    // int j = 0; // index for pat[]
     int match;
 
     while (i < n) {
-        if (pat[j] == txt[i]) {
-            j++;
+        if (pat[*j] == txt[i]) {
+            *j = *j + 1;
             i++;
         }
   
-        if (j == m) {
-            match = i - j;
-            j = lps[j - 1];
+        if (*j == m) {
+            match = i - *j;
+            *j = lps[*j - 1];
 
 	    return match;
         }
   
         // mismatch after j matches
-        else if (i < n && pat[j] != txt[i]) {
+        else if (i < n && pat[*j] != txt[i]) {
             // Do not match lps[0..lps[j-1]] characters,
             // they will match anyway
-            if (j != 0)
-                j = lps[j - 1];
+            if (*j != 0)
+                *j = lps[*j - 1];
             else
                 i = i + 1;
         }

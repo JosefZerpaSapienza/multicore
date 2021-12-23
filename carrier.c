@@ -5,9 +5,10 @@
 #include <fcntl.h>
 #include "kmp_search.h"
 
+#define USAGE "\nUSAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\n\n"
 #define TCP_BUFFER_SIZE 1024
 
-int main (void) 
+int main (int argc, char** argv) 
 {
   char text_buffer[TCP_BUFFER_SIZE];
   int text_buffer_size = TCP_BUFFER_SIZE;
@@ -15,22 +16,32 @@ int main (void)
   int index = -1;
   int c, j, iteration;
 
+  if (argc < 3) 
+  {
+    printf(USAGE);
+    return 1;
+  }
+
   // TODO: Get values from command line.
-  char *filename = "datastream.txt";
-  char *patterns[] = { "Hello", "ip", "name", "address", "password" };
-  int p = 5;
-  // Array of pattern lengths
+  char *filename = argv[1];
+  int p = argc - 2;
+  // Array of patterns to be searched.
+  char **patterns = malloc(sizeof(char *) * p);
+  // Array of pattern lengths.
   int *lengths = malloc(sizeof(int) * p);
   // Array of lps[] for each pattern
   int **lps = malloc(sizeof(int *) * p);
+  // Array of j indexes storing progression of the kmp search.
+  int *js = malloc(sizeof(int) * p);
 
-  // Allocate and populate lengths and lps arrays.
+  // Populate arrays of patterns, lengths, lps, and js.
   for (int i = 0; i < p; i++) 
   {
+    patterns[i] = argv[2 + i];
     lengths[i] = strlen(patterns[i]);
     lps[i] = malloc(sizeof(int) * lengths[i]);
-
     computeLPS(patterns[i], lengths[i], lps[i]);
+    js[i] = 0;
   }
 
   // Open stream.
@@ -53,8 +64,7 @@ int main (void)
     for (j = 0; (index == -1) && (j < p); j++) 
     {
       index = KMPsearch(patterns[j], lengths[j], \
-		      text_buffer, text_buffer_size, lps[j]);
-      printf("dbg: it: %d pat: %s index: %d\n", iteration, patterns[j], index);
+		      text_buffer, text_buffer_size, lps[j], &(js[j]));
     }
   }
   iteration--;
@@ -65,7 +75,6 @@ int main (void)
     perror("\nError reading file.\n");
   }
   
-  // TODO: Print indexes of found matches.
   // Print results.
   if (index == -1) 
   {
@@ -79,12 +88,14 @@ int main (void)
   
   // Clean.
   close(fd);
+  free(patterns);
   free(lengths);
   for(int i = 0; i < p; i++) 
   {
     free(lps[i]);
   }
   free(lps);
+  free(js);
 
   return 0;
 }
