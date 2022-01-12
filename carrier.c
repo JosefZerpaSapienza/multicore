@@ -22,26 +22,27 @@ int main (int argc, char** argv)
     return 1;
   }
 
-  // TODO: Get values from command line.
+  // File to be searched.
   char *filename = argv[1];
-  int p = argc - 2;
+  // Number of patterns.
+  int n_patterns = argc - 2;
   // Array of patterns to be searched.
-  char **patterns = malloc(sizeof(char *) * p);
+  char **patterns = malloc(sizeof(char *) * n_patterns);
   // Array of pattern lengths.
-  int *lengths = malloc(sizeof(int) * p);
+  int *lengths = malloc(sizeof(int) * n_patterns);
   // Array of lps[] for each pattern
-  int **lps = malloc(sizeof(int *) * p);
-  // Array of j indexes storing progression of the kmp search.
-  int *js = malloc(sizeof(int) * p);
+  int **lps = malloc(sizeof(int *) * n_patterns);
+  // Array of 'status' indexes storing progression of the kmp search.
+  int *status = malloc(sizeof(int) * n_patterns);
 
-  // Populate arrays of patterns, lengths, lps, and js.
-  for (int i = 0; i < p; i++) 
+  // Populate arrays of patterns, lengths, lps, and status.
+  for (int i = 0; i < n_patterns; i++) 
   {
     patterns[i] = argv[2 + i];
     lengths[i] = strlen(patterns[i]);
     lps[i] = malloc(sizeof(int) * lengths[i]);
     computeLPS(patterns[i], lengths[i], lps[i]);
-    js[i] = 0;
+    status[i] = 0;
   }
 
   // Open stream.
@@ -61,10 +62,10 @@ int main (int argc, char** argv)
 	iteration++)
   {
     // Apply search for each pattern.
-    for (j = 0; (index == -1) && (j < p); j++) 
+    for (j = 0; (index == -1) && (j < n_patterns); j++) 
     {
       index = KMPsearch(patterns[j], lengths[j], \
-		      text_buffer, text_buffer_size, lps[j], &(js[j]));
+		      text_buffer, text_buffer_size, lps[j], &(status[j]));
     }
   }
   iteration--;
@@ -90,12 +91,12 @@ int main (int argc, char** argv)
   close(fd);
   free(patterns);
   free(lengths);
-  for(int i = 0; i < p; i++) 
+  for(int i = 0; i < n_patterns; i++) 
   {
     free(lps[i]);
   }
   free(lps);
-  free(js);
+  free(status);
 
   return 0;
 }

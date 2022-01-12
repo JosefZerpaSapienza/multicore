@@ -6,7 +6,7 @@
 //
    
 // Fills lps array for given pattern pat[0..M-1].
-void computeLPS(char* pat, int M, int* lps)
+void computeLPS(char* pat, int size, int* lps)
 {
     // length of the previous longest prefix suffix
     int len = 0;
@@ -15,7 +15,7 @@ void computeLPS(char* pat, int M, int* lps)
   
     // the loop calculates lps[i] for i = 1 to M-1
     int i = 1;
-    while (i < M) {
+    while (i < size) {
         if (pat[i] == pat[len]) {
             len++;
             lps[i] = len;
@@ -45,32 +45,32 @@ void computeLPS(char* pat, int M, int* lps)
 // index at which the pattern is found.
 // pat: pattern string; m: its size
 // txt: text string; n: its size
-// lps: the lps array
-int KMPsearch(char* pat, int m, char* txt, int n, int *lps, int *j)
+// lps: the lps array status: records the status of the search on txt based on lps
+int KMPsearch(char* pat, int m, char* txt, int n, int *lps, int *status)
 {
     int i = 0; // index for txt[]
-    // int j = 0; // index for pat[]
+    // int status = 0; // index for pat[]
     int match;
 
     while (i < n) {
-        if (pat[*j] == txt[i]) {
-            *j = *j + 1;
+        if (pat[*status] == txt[i]) {
+            *status = *status + 1;
             i++;
         }
   
-        if (*j == m) {
-            match = i - *j;
-            *j = lps[*j - 1];
+        if (*status == m) {
+            match = i - *status;
+            *status = lps[*status - 1];
 
 	    return match;
         }
   
-        // mismatch after j matches
-        else if (i < n && pat[*j] != txt[i]) {
-            // Do not match lps[0..lps[j-1]] characters,
+        // mismatch after status matches
+        else if (i < n && pat[*status] != txt[i]) {
+            // Do not match lps[0..lps[status-1]] characters,
             // they will match anyway
-            if (*j != 0)
-                *j = lps[*j - 1];
+            if (*status != 0)
+                *status = lps[*status - 1];
             else
                 i = i + 1;
         }
