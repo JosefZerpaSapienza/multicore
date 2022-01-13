@@ -53,9 +53,6 @@ int main (int argc, char** argv)
     return -1;
   }
 
-  // TODO: Consider matches that cross
-  //       over different sections of read.
-
   // Iteratively read from stream.
   for(iteration = 0; \
 	(index == -1) && (c = read(fd, text_buffer, text_buffer_size) > 0); \
