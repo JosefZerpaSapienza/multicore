@@ -3,11 +3,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
-// #include "kmp_search_linear.h"
-#include "ac_search_linear.h"
+// #include "linear_kmp_search.h"
+#include "linear_ac_search.h"
 
-#define USAGE "\n USAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\n\n\
- The pattern found is the first pattern appearing in the input.\n"
+#define USAGE "\n USAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\n\n"
 #define TCP_BUFFER_SIZE 1024
 
 int main (int argc, char** argv) 
@@ -91,12 +90,12 @@ int main (int argc, char** argv)
   // Print results.
   if (index == -1) 
   {
-    printf("Patterns not found.\n");
+    printf("\nPatterns not found.\n");
   } 
   else 
   {
     index = index + text_buffer_size * iteration;
-    printf("Pattern %s found at index: %d.\n", *word, index);
+    printf("\nPattern %s found at index: %d.\n", *word, index);
   }
   
   // Clean.

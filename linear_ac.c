@@ -91,12 +91,12 @@ int main (int argc, char** argv)
   // Print results.
   if (index == -1) 
   {
-    printf("Patterns not found.\n");
+    printf("\nPatterns not found.\n");
   } 
   else 
   {
     index = index + text_buffer_size * iteration;
-    printf("Pattern %s found at index: %d.\n", *word, index);
+    printf("\nPattern %s found at index: %d.\n", *word, index);
   }
   
   // Clean.
