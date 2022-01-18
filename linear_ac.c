@@ -4,7 +4,7 @@
 #include <string.h>
 #include <fcntl.h>
 // #include "linear_kmp_search.h"
-#include "ac_search_linear.h"
+#include "linear_ac_search.h"
 
 #define USAGE "\n USAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\n\n\
  The pattern found is the first pattern appearing in the input.\n"
