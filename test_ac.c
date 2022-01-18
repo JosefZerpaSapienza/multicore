@@ -1,4 +1,5 @@
-#include "ac_search.h"
+#include <string.h>
+#include "ac_search_linear.h"
 
 // Driver program to test above
 int main()
@@ -9,10 +10,15 @@ int main()
 	arr[2] = "hers";
 	arr[3] = "his";
 	char *text = "ahishers";
-	int k = sizeof(arr)/sizeof(arr[0]);
+	int k = 4;
+	int *searchState;
+	int state = 0;
+	searchState = &state;
+
+	struct MatchingAutomaton *ma = getMatchingAutomaton(arr, k);
 
 	printf("%s\n", text);
-	searchWords(arr, k, text);
+	searchWords(arr, k, text, strlen(text), ma, searchState);
 
 	return 0;
 }
