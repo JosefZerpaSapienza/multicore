@@ -3,9 +3,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
-#include "kmp_search.h"
+// #include "kmp_search_linear.h"
+#include "ac_search_linear.h"
 
-#define USAGE "\nUSAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\n\n"
+#define USAGE "\n USAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\n\n\
+ The pattern found is the first pattern appearing in the input.\n"
 #define TCP_BUFFER_SIZE 1024
 
 int main (int argc, char** argv) 
@@ -28,22 +30,35 @@ int main (int argc, char** argv)
   int n_patterns = argc - 2;
   // Array of patterns to be searched.
   char **patterns = malloc(sizeof(char *) * n_patterns);
+  /*
   // Array of pattern lengths.
   int *lengths = malloc(sizeof(int) * n_patterns);
   // Array of lps[] for each pattern
   int **lps = malloc(sizeof(int *) * n_patterns);
   // Array of 'status' indexes storing progression of the kmp search.
   int *status = malloc(sizeof(int) * n_patterns);
+  */
+
+  int *searchState;
+  int zero = 0;
+  searchState = &zero;
+  char **word;
 
   // Populate arrays of patterns, lengths, lps, and status.
   for (int i = 0; i < n_patterns; i++) 
   {
     patterns[i] = argv[2 + i];
+    /*
     lengths[i] = strlen(patterns[i]);
     lps[i] = malloc(sizeof(int) * lengths[i]);
     computeLPS(patterns[i], lengths[i], lps[i]);
     status[i] = 0;
+    */
   }
+
+  // Matching Automaton for A-C search
+  struct MatchingAutomaton *ma;
+  ma = getMatchingAutomaton(patterns, n_patterns);
 
   // Open stream.
   fd = open((const char*) filename, O_RDONLY);
@@ -61,8 +76,8 @@ int main (int argc, char** argv)
     // Apply search for each pattern.
     for (j = 0; (index == -1) && (j < n_patterns); j++) 
     {
-      index = KMPsearch(patterns[j], lengths[j], \
-		      text_buffer, text_buffer_size, lps[j], &(status[j]));
+      index = ACsearch(patterns, n_patterns, text_buffer, text_buffer_size, \
+		      ma, searchState, word);
     }
   }
   iteration--;
@@ -76,17 +91,18 @@ int main (int argc, char** argv)
   // Print results.
   if (index == -1) 
   {
-    printf("Pattern not found.\n");
+    printf("Patterns not found.\n");
   } 
   else 
   {
     index = index + text_buffer_size * iteration;
-    printf("Pattern %s found at index: %d.\n", patterns[j], index);
+    printf("Pattern %s found at index: %d.\n", *word, index);
   }
   
   // Clean.
   close(fd);
   free(patterns);
+  /*
   free(lengths);
   for(int i = 0; i < n_patterns; i++) 
   {
@@ -94,6 +110,7 @@ int main (int argc, char** argv)
   }
   free(lps);
   free(status);
-
+  */
+  free(ma);
   return 0;
 }
