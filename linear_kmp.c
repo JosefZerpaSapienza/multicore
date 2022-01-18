@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
-#include "kmp_search.h"
+#include "kmp_search_linear.h"
 
 #define USAGE "\n USAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\
 	\n\n Remember, the program just finds any pattern at any \
