@@ -1,12 +1,12 @@
 # multicore
 
-Bellaa Angeloooo!
+Bellaa Joo!
 
 Repo per lo sviluppo del progetto di Multicore.
 
-Progetto scelto: 10.
-Implementazione di un framework master/worker multithreading
-usande MPI/Pthreads.
+Progetto scelto: 1.
+Implementazione di algoritmi paralleli per string matching
+usando MPI/OpenMP.
 
 
 SETUP:
