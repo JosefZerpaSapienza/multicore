@@ -1,0 +1,4 @@
+- Get pcap test file with:
+  sudo tcpdump -w dump.pcap
+
+- 'nginx.org' supports surfing on http
