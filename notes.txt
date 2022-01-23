@@ -2,3 +2,8 @@
   sudo tcpdump -w dump.pcap
 
 - 'nginx.org' supports surfing on http
+
+- some test words found on nginx.org
+  security vulnerable public key download
+
+- in vim use ':goto [byte]' to move to the selected [byte] in the file
