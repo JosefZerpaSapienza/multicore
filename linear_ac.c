@@ -4,7 +4,7 @@
 #include <string.h>
 #include <fcntl.h>
 // #include "linear_kmp_search.h"
-#include "linear_ac_search.h"
+#include "ac_search.h"
 
 #define USAGE "\n USAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\n\n\
  The pattern found is the first pattern appearing in the input.\n"
@@ -39,10 +39,8 @@ int main (int argc, char** argv)
   int *status = malloc(sizeof(int) * n_patterns);
   */
 
-  int *searchState;
-  int zero = 0;
-  searchState = &zero;
-  char **word;
+  int searchState = 0;
+  char *word;
 
   // Populate arrays of patterns, lengths, lps, and status.
   for (int i = 0; i < n_patterns; i++) 
@@ -70,18 +68,13 @@ int main (int argc, char** argv)
 
   // Iteratively read from stream.
   for(iteration = 0; \
-	(index == -1) && (c = read(fd, text_buffer, text_buffer_size) > 0); \
+	(index == -1) && ((c = read(fd, text_buffer, text_buffer_size)) > 0); \
 	iteration++)
   {
-    // Apply search for each pattern.
-    for (j = 0; (index == -1) && (j < n_patterns); j++) 
-    {
       index = ACsearch(patterns, n_patterns, text_buffer, text_buffer_size, \
-		      ma, searchState, word);
-    }
+		      ma, &searchState, &word);
   }
   iteration--;
-  j--;
 
   // Check error reading file
   if (c == -1) {
@@ -96,7 +89,7 @@ int main (int argc, char** argv)
   else 
   {
     index = index + text_buffer_size * iteration;
-    printf("\nPattern %s found at index: %d.\n", *word, index);
+    printf("\nPattern %s found at index: %d.\n", word, index);
   }
   
   // Clean.

@@ -6,36 +6,36 @@
 #include "queue.h"
 
 // Max number of states in the matching machine.
-// Should be equal to the sum of the length of all keywords.
-#define MAXS 500
+// Should be equal to the sum of the length of all keywords. TODO: Check (efficiency improvement?)
+#define MAXS 500 
 
 // Maximum number of characters in input alphabet
 #define MAXC 26
 
-// OUTPUT FUNCTION IS IMPLEMENTED USING out[]
-// Bit i in this mask is one if the word with index i
-// appears when the machine enters this state.
-int out[MAXS];
+// Matching Automaton
+struct MatchingAutomaton {
+  int out[MAXS];
+  int failure[MAXS];
+  int gotos[MAXS][MAXC];
+};
 
-// FAILURE FUNCTION IS IMPLEMENTED USING f[]
-int f[MAXS];
-
-// GOTO FUNCTION (OR TRIE) IS IMPLEMENTED USING g[][]
-int g[MAXS][MAXC];
-
-// Builds the string matching machine.
+// Get matching automaton.
+// Allocates and builds a matching automaton for the
+// given array of patterns.
 // arr - array of words. The index of each keyword is important:
 //		 "out[state] & (1 << i)" is > 0 if we just found word[i]
 //		 in the text.
-// Returns the number of states that the built machine has.
-// States are numbered 0 up to the return value - 1, inclusive.
-int buildMatchingMachine(char **arr, int k)
+// k - the number of words in the array.
+struct MatchingAutomaton *getMatchingAutomaton(char **arr, int k)
 {
-	// Initialize all values in output function as 0.
-	memset(out, 0, sizeof out);
-
-	// Initialize all values in goto function as -1.
-	memset(g, -1, sizeof g);
+	// Allocate matching automaton
+	struct MatchingAutomaton *ma = malloc(sizeof(struct MatchingAutomaton));
+	// Fill out function with 0
+	memset(ma->out, 0, MAXS); 
+	// Fill failure functions with -1
+	memset(ma->failure, -1, MAXS);
+	// Fill goto functions with -1
+	memset(ma->gotos, -1, MAXS * MAXC);
 
 	// Initially, we just have the 0 state
 	int states = 1;
@@ -55,27 +55,22 @@ int buildMatchingMachine(char **arr, int k)
 
 			// Allocate a new node (create a new state) if a
 			// node for ch doesn't exist.
-			if (g[currentState][ch] == -1)
-				g[currentState][ch] = states++;
+			if (ma->gotos[currentState][ch] == -1)
+				ma->gotos[currentState][ch] = states++;
 
-			currentState = g[currentState][ch];
+			currentState = ma->gotos[currentState][ch];
 		}
 
 		// Add current word in output function
-		out[currentState] |= (1 << i);
+		ma->out[currentState] |= (1 << i);
 	}
 
 	// For all characters which don't have an edge from
 	// root (or state 0) in Trie, add a goto edge to state
 	// 0 itself
 	for (int ch = 0; ch < MAXC; ++ch)
-		if (g[0][ch] == -1)
-			g[0][ch] = 0;
-
-	// Now, let's build the failure function
-
-	// Initialize values in fail function
-	memset(f, -1, sizeof f);
+		if (ma->gotos[0][ch] == -1)
+			ma->gotos[0][ch] = 0;
 
 	// Failure function is computed in breadth first order
 	// using a queue
@@ -87,10 +82,10 @@ int buildMatchingMachine(char **arr, int k)
 		// All nodes of depth 1 have failure function value
 		// as 0. For example, in above diagram we move to 0
 		// from states 1 and 3.
-		if (g[0][ch] != 0)
+		if (ma->gotos[0][ch] != 0)
 		{
-			f[g[0][ch]] = 0;
-			enqueue(q, g[0][ch]);
+			ma->failure[ma->gotos[0][ch]] = 0;
+			enqueue(q, ma->gotos[0][ch]);
 		}
 	}
 
@@ -107,30 +102,30 @@ int buildMatchingMachine(char **arr, int k)
 		{
 			// If goto function is defined for character 'ch'
 			// and 'state'
-			if (g[state][ch] != -1)
+			if (ma->gotos[state][ch] != -1)
 			{
 				// Find failure state of removed state
-				int failure = f[state];
+				int failure = ma->failure[state];
 
 				// Find the deepest node labeled by proper
 				// suffix of string from root to current
 				// state.
-				while (g[failure][ch] == -1)
-					failure = f[failure];
+				while (ma->gotos[failure][ch] == -1)
+					failure = ma->failure[failure];
 
-				failure = g[failure][ch];
-				f[g[state][ch]] = failure;
+				failure = ma->gotos[failure][ch];
+				ma->failure[ma->gotos[state][ch]] = failure;
 
 				// Merge output values
-				out[g[state][ch]] |= out[failure];
+				ma->out[ma->gotos[state][ch]] |= ma->out[failure];
 
 				// Insert the next level node (of Trie) in Queue
-				enqueue(q, g[state][ch]);
+				enqueue(q, ma->gotos[state][ch]);
 			}
 		}
 	}
 
-	return states;
+	return ma;
 }
 
 // Returns the next state the machine will transition to using goto
@@ -138,48 +133,47 @@ int buildMatchingMachine(char **arr, int k)
 // currentState - The current state of the machine. Must be between
 //			 0 and the number of states - 1, inclusive.
 // nextInput - The next character that enters into the machine.
-int findNextState(int currentState, char nextInput)
+int findNextState(struct MatchingAutomaton *ma, int currentState, char nextInput)
 {
 	int answer = currentState;
 	int ch = nextInput - 'a';
 
 	// If goto is not defined, use failure function
-	while (g[answer][ch] == -1)
-		answer = f[answer];
+	while (ma->gotos[answer][ch] == -1)
+		answer = ma->failure[answer];
 
-	return g[answer][ch];
+	return ma->gotos[answer][ch];
 }
 
 // This function finds all occurrences of all array words
 // in text.
-void searchWords(char **arr, int k, char *text)
+// As first search set currentState to 0
+// Return -1 when no word is found, the index otherwise.
+int ACsearch(char **arr, int k, char *text, int len,
+		struct MatchingAutomaton *ma, int *currentState, char **word)
 {
-	// Preprocess patterns.
-	// Build machine with goto, failure and output functions
-	buildMatchingMachine(arr, k);
-
-	// Initialize current state
-	int currentState = 0;
-
 	// Traverse the text through the built machine to find
 	// all occurrences of words in arr[]
-	for (int i = 0; i < strlen(text); ++i)
+	for (int i = 0; i < len; ++i)
 	{
-		currentState = findNextState(currentState, text[i]);
+		*currentState = findNextState(ma, *currentState, text[i]);
 
 		// If match not found, move to next state
-		if (out[currentState] == 0)
+		if (ma->out[*currentState] == 0)
 			continue;
 
 		// Match found, print all matching words of arr[]
 		// using output function.
 		for (int j = 0; j < k; ++j)
 		{
-			if (out[currentState] & (1 << j))
+			if (ma->out[*currentState] & (1 << j))
 			{
-				printf("Found word %s at %ld.\n", arr[j], i - strlen(arr[j]) + 1);
+				// printf("Found word %s at %ld.\n", arr[j], i - strlen(arr[j]) + 1);
+				*word = arr[j];
+				return i - strlen(arr[j]) + 1;
 			}
 		}
 	}
-}
 
+	return -1;
+}
