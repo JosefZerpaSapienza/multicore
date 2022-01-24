@@ -7,10 +7,10 @@ TEST2 = word Parola palabra
 TEST3 = InTheMiddle InTheCenter InBetween
 TEST4 = NotFound notFound not_found nada 
 
-linear_kmp: linear_kmp.c linear_kmp_search.h
+linear_kmp: linear_kmp.c kmp_search.h
 	$(CC) -o $@ $<
 
-linear_ac: linear_ac.c linear_ac_search.h queue.h
+linear_ac: linear_ac.c ac_search.h queue.h
 	$(CC) -o $@ $<
 
 all: linear_kmp linear_ac
