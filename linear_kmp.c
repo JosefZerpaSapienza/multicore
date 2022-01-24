@@ -83,6 +83,7 @@ int main (int argc, char** argv)
   } 
   else 
   {
+    printf("local_index: %d  iteration: %d \n", index, iteration);
     index = index + text_buffer_size * iteration;
     printf("\nPattern %s found at index: %d.\n", patterns[j], index);
   }

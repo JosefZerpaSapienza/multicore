@@ -25,7 +25,8 @@ int main (int argc, char** argv)
   int index = -1;
   int c = 1;
   int j; 
-  int iteration, send_rank, recv_rank;
+  int iteration = 0;
+  int send_rank, recv_rank;
   int comm_sz, my_rank;
 
   if (argc < 3) 
@@ -80,13 +81,13 @@ int main (int argc, char** argv)
       for (send_rank = 1; 
   	send_rank < comm_sz &&  
   	(c = overlapped_read_into_buffer(
- 		fd, text_buffer, text_buffer_size, max_length, iteration++)) > 0; 
+ 		fd, text_buffer, text_buffer_size, max_length - 1, iteration++)) > 0; 
 	send_rank++)
       {
 	// Send number of chars read.
 	MPI_Send(&c, 1, MPI_INT, send_rank, 0, MPI_COMM_WORLD);
 	// Send buffer.
-        MPI_Ssend(text_buffer, c, MPI_CHAR, send_rank, 0, MPI_COMM_WORLD);
+        MPI_Send(text_buffer, c, MPI_CHAR, send_rank, 0, MPI_COMM_WORLD);
       }
       // Receive result
       for(recv_rank = 1; 
@@ -116,9 +117,9 @@ int main (int argc, char** argv)
     } 
     else 
     {
-      index = index + text_buffer_size * iteration - (iteration - 1) * max_length;
-      // printf("\nPattern %s found at index: %d.\n", patterns[j], index);
-      printf("Pattern found. index: %d    iteration: %d    j: %d", index, iteration, j);
+	    printf("it: %d  recv_rank: %d  index: %d\n ", iteration, recv_rank, index);
+      index = index + ((iteration - 1) + (recv_rank - comm_sz)) * (text_buffer_size - (max_length - 1));
+      printf("\nPattern %s found at index: %d.\n", patterns[j], index);
     }
  
     close(fd);
@@ -138,6 +139,7 @@ int main (int argc, char** argv)
         index = KMPsearch(patterns[j], lengths[j], text_buffer,
   		      c, lps[j], &zero);
       }
+      j--;
       // Send Results.
       MPI_Send(&index, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
       if (index != -1) 
@@ -147,7 +149,7 @@ int main (int argc, char** argv)
     }
   }
 
-  MPI_Finalize();
+  MPI_Abort(MPI_COMM_WORLD, 0);
 
   // Clean.
   free(patterns);
@@ -185,8 +187,11 @@ int overlapped_read_into_buffer(int fd, char *buffer,
 
   // Read from fd and write buffer
   int c = read(fd, buffer, buffer_size);
-  
-  return (c == -1 ? c : c + overlap);
+  if (c > 0 && iteration > 0) 
+  {
+    c += overlap;
+  }
+  return c;
 }
 
 
