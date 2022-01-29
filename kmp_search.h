@@ -46,36 +46,36 @@ void computeLPS(char* pat, int size, int* lps)
 // pat: pattern string; m: its size
 // txt: text string; n: its size
 // lps: the lps array status: records the status of the search on txt based on lps
-int KMPsearch(char* pat, int m, char* txt, int n, int *lps, int *status)
+void KMPsearch(char* pat, int m, char* txt, int n, int *lps, int *status, int *index)
 {
-    int i = 0; // index for txt[]
+    *index = 0; // index for txt[]
     // int status = 0; // index for pat[]
-    int match;
 
-    while (i < n) {
-        if (pat[*status] == txt[i]) {
+    while (*index < n) {
+        if (pat[*status] == txt[*index]) {
             *status = *status + 1;
-            i++;
+            *index = *index + 1;
         }
   
         if (*status == m) {
-            match = i - *status;
+	    // found match
+            *index = *index - *status;
             *status = lps[*status - 1];
 
-	    return match;
+	    return;
         }
   
         // mismatch after status matches
-        else if (i < n && pat[*status] != txt[i]) {
+        else if (*index < n && pat[*status] != txt[*index]) {
             // Do not match lps[0..lps[status-1]] characters,
             // they will match anyway
             if (*status != 0)
                 *status = lps[*status - 1];
             else
-                i = i + 1;
+                *index = *index + 1;
         }
     }
 
-    return -1;
+  *index = -1;
 }
 

@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <mpi.h>
 #include "kmp_search.h"
+#include "overlapped_read.h"
 
 #define USAGE "\n USAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\
 	\n\n Remember, the program just finds any pattern at any \
@@ -13,19 +14,15 @@ exclusively the first pattern in the text.\n"
 
 #define TCP_BUFFER_SIZE 1024
 
-// Read from fd into buffer, handling overlapping.
-int overlapped_read_into_buffer(int fd, char *buffer,
-	       	int buffer_size, int overlap, int iteration);
-
 int main (int argc, char** argv) 
 {
   char text_buffer[TCP_BUFFER_SIZE];
   int text_buffer_size = TCP_BUFFER_SIZE;
   int fd;
   int index = -1;
+  int g_index = 0;
   int c = 1;
   int j; 
-  int iteration = 0;
   int send_rank, recv_rank;
   int comm_sz, my_rank;
 
@@ -47,6 +44,7 @@ int main (int argc, char** argv)
   int **lps = malloc(sizeof(int *) * n_patterns);
   // Lenght of the lenghiest pattern (for search-buffer overlapping)
   int max_length = 0;
+  int zero = 0;
 
   // Populate arrays of patterns, lengths, lps, and status.
   for (int i = 0; i < n_patterns; i++) 
@@ -78,28 +76,27 @@ int main (int argc, char** argv)
     while(index == -1 && c > 0) 
     {
       // Read and send data
-      for (send_rank = 1; 
-  	send_rank < comm_sz &&  
+      for (send_rank = 1; send_rank < comm_sz &&  
   	(c = overlapped_read_into_buffer(
- 		fd, text_buffer, text_buffer_size, max_length - 1, iteration++)) > 0; 
+ 		fd, text_buffer, text_buffer_size, max_length - 1, &g_index)) > 0; 
 	send_rank++)
       {
 	// Send number of chars read.
 	MPI_Send(&c, 1, MPI_INT, send_rank, 0, MPI_COMM_WORLD);
+
 	// Send buffer.
         MPI_Send(text_buffer, c, MPI_CHAR, send_rank, 0, MPI_COMM_WORLD);
       }
+
       // Receive result
-      for(recv_rank = 1; 
-	recv_rank < send_rank &&
-	index == -1;
-	recv_rank++) 
+      for(recv_rank = 1; recv_rank < send_rank && index == -1; ) 
       {
         MPI_Recv(&index, 1, MPI_INT, recv_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	if (index != -1) 
 	{
           MPI_Recv(&j, 1, MPI_INT, recv_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	}
+	} 
+	else { recv_rank++; }
       }
     }
 
@@ -117,29 +114,31 @@ int main (int argc, char** argv)
     } 
     else 
     {
-	    printf("it: %d  recv_rank: %d  index: %d\n ", iteration, recv_rank, index);
-      index = index + ((iteration - 1) + (recv_rank - comm_sz)) * (text_buffer_size - (max_length - 1));
-      printf("\nPattern %s found at index: %d.\n", patterns[j], index);
+      g_index = g_index - c 
+	      - ((text_buffer_size - (max_length - 1)) * ((send_rank - 1) - recv_rank));
+      printf("\nPattern %s found at index: %d.\n", patterns[j], g_index + index);
     }
  
     close(fd);
   }
+
   // Slave: Receive data, perform search, send result.
   else {
     while(1) 
     {
       // Receive buffer size.
       MPI_Recv(&c, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
       // Receive buffer.
       MPI_Recv(text_buffer, c, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
       // Apply search for each pattern.
       for(j = 0; (index == -1) && (j < n_patterns); j++)
       {
-	int zero = 0;
-        index = KMPsearch(patterns[j], lengths[j], text_buffer,
-  		      c, lps[j], &zero);
+        KMPsearch(patterns[j], lengths[j], text_buffer, c, lps[j], &zero, &index);
       }
       j--;
+
       // Send Results.
       MPI_Send(&index, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
       if (index != -1) 
@@ -162,38 +161,4 @@ int main (int argc, char** argv)
 
   return 0;
 }
-
-// Read from fd, and write on buffer, handling the ovelapping
-// of size overlap between sequential reads.
-// iteration - tells whether it is the first iteration 
-//
-// Returns the number of characters written (including overlapping),
-// -1 on failure.
-int overlapped_read_into_buffer(int fd, char *buffer,
-	       	int buffer_size, int overlap, int iteration)
-{
-  // Perform overlapping only after the first read.
-  if(iteration > 0) {
-    // Copy final characters into the beginning positions.
-    for(int i = 0; i < overlap; i++)
-    {
-      buffer[i] = buffer[buffer_size - i - 1];
-    }
-    // Slide buffer pointer.
-    buffer += overlap;
-    // Decrement buffer size.
-    buffer_size -= overlap;
-  }
-
-  // Read from fd and write buffer
-  int c = read(fd, buffer, buffer_size);
-  if (c > 0 && iteration > 0) 
-  {
-    c += overlap;
-  }
-  return c;
-}
-
-
-
 

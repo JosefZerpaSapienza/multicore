@@ -64,8 +64,8 @@ int main (int argc, char** argv)
     // Apply search for each pattern.
     for (j = 0; (index == -1) && (j < n_patterns); j++) 
     {
-      index = KMPsearch(patterns[j], lengths[j], \
-		      text_buffer, text_buffer_size, lps[j], &(status[j]));
+      KMPsearch(patterns[j], lengths[j], \
+	text_buffer, text_buffer_size, lps[j], &(status[j]), &index);
     }
   }
   iteration--;
