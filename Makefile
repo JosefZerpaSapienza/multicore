@@ -14,8 +14,11 @@ linear_kmp: linear_kmp.c kmp_search.h
 linear_ac: linear_ac.c ac_search.h queue.h
 	$(CC) -o $@ $<
 
-mpi_kmp: mpi_kmp.c kmp_search.h
+mpi_kmp: mpi_kmp.c kmp_search.h overlapped_read.h
 	$(MPICC) -o $@ $<
+
+omp_kmp: omp_kmp.c kmp_search.h overlapped_read.h
+	$(CC) -fopenmp -o $@ $<
 
 all: linear_kmp linear_ac
 
@@ -47,13 +50,26 @@ test_linear_ac4: linear_ac_
 	./$< $(TESTFILE) $(TEST4)
 
 test_mpi_kmp1: mpi_kmp
-	mpirun -np 10 ./$< $(TESTFILE) $(TEST1)
+	mpirun -np 4 ./$< $(TESTFILE) $(TEST1)
 
 test_mpi_kmp2: mpi_kmp
-	mpirun -np 10 ./$< $(TESTFILE) $(TEST2)
+	mpirun -np 4 ./$< $(TESTFILE) $(TEST2)
 	
 test_mpi_kmp3: mpi_kmp
-	mpirun -np 10 ./$< $(TESTFILE) $(TEST3)
+	mpirun -np 4 ./$< $(TESTFILE) $(TEST3)
 
 test_mpi_kmp4: mpi_kmp
-	mpirun -np 10 ./$< $(TESTFILE) $(TEST4)
+	mpirun -np 4 ./$< $(TESTFILE) $(TEST4)
+
+test_omp_kmp1: omp_kmp
+	./$< 4 $(TESTFILE) $(TEST1)
+
+test_omp_kmp2: omp_kmp
+	./$< 4 $(TESTFILE) $(TEST2)
+
+test_omp_kmp3: omp_kmp
+	./$< 4 $(TESTFILE) $(TEST3)
+
+test_omp_kmp4: omp_kmp
+	./$< 4 $(TESTFILE) $(TEST4)
+
