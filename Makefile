@@ -2,74 +2,75 @@
 
 CC = gcc
 MPICC = mpicc
+ALL = linear_kmp linear_ac mpi_kmp omp_kmp
 TESTFILE = testfile.txt
+TESTDUMP = testdump.pcap
 TEST1 = foo Random Hello World
-TEST2 = word Parola palabra
-TEST3 = InTheMiddle InTheCenter InBetween
-TEST4 = NotFound notFound not_found nada 
+TEST2 = InTheMiddle InTheCenter InBetween
+TEST3 = NotFound notFound not_found nada 
 
 linear_kmp: linear_kmp.c kmp_search.h
 	$(CC) -o $@ $<
 
-linear_ac: linear_ac.c ac_search.h queue.h
+linear_ac: linear_ac.c ac_search.h queue.h 
 	$(CC) -o $@ $<
 
-mpi_kmp: mpi_kmp.c kmp_search.h overlapped_read.h
+mpi_kmp: mpi_kmp.c kmp_search.h overlapped_read.h 
 	$(MPICC) -o $@ $<
 
-omp_kmp: omp_kmp.c kmp_search.h overlapped_read.h
+omp_kmp: omp_kmp.c kmp_search.h overlapped_read.h 
 	$(CC) -fopenmp -o $@ $<
 
-all: linear_kmp linear_ac
+all: $(ALL)
 
 clean:
-	rm linear_kmp linear_ac
+	rm -f $(ALL)
 
-test_linear_kmp1: linear_kmp
+testfile_linear_kmp1: linear_kmp
 	./$< $(TESTFILE) $(TEST1)
 
-test_linear_kmp2: linear_kmp
+testfile_linear_kmp2: linear_kmp
 	./$< $(TESTFILE) $(TEST2)
 
-test_linear_kmp3: linear_kmp
+testfile_linear_kmp3: linear_kmp
 	./$< $(TESTFILE) $(TEST3)
 
-test_linear_kmp4: linear_kmp
+testfile_linear_kmp4: linear_kmp
 	./$< $(TESTFILE) $(TEST4)
 
-test_linear_ac1: linear_ac
+testfile_linear_ac1: linear_ac
 	./$< $(TESTFILE) $(TEST1)
 
-test_linear_ac2: linear_ac
+testfile_linear_ac2: linear_ac
 	./$< $(TESTFILE) $(TEST2)
 
-test_linear_ac3: linear_ac
+testfile_linear_ac3: linear_ac
 	./$< $(TESTFILE) $(TEST3)
 
-test_linear_ac4: linear_ac_
+testfile_linear_ac4: linear_ac_
 	./$< $(TESTFILE) $(TEST4)
 
-test_mpi_kmp1: mpi_kmp
+testfile_mpi_kmp1: mpi_kmp
 	mpirun -np 4 ./$< $(TESTFILE) $(TEST1)
 
-test_mpi_kmp2: mpi_kmp
+testfile_mpi_kmp2: mpi_kmp
 	mpirun -np 4 ./$< $(TESTFILE) $(TEST2)
 	
-test_mpi_kmp3: mpi_kmp
+testfile_mpi_kmp3: mpi_kmp
 	mpirun -np 4 ./$< $(TESTFILE) $(TEST3)
 
-test_mpi_kmp4: mpi_kmp
+testfile_mpi_kmp4: mpi_kmp
 	mpirun -np 4 ./$< $(TESTFILE) $(TEST4)
 
-test_omp_kmp1: omp_kmp
+testfile_omp_kmp1: omp_kmp
 	./$< 4 $(TESTFILE) $(TEST1)
 
-test_omp_kmp2: omp_kmp
+testfile_omp_kmp2: omp_kmp
 	./$< 4 $(TESTFILE) $(TEST2)
 
-test_omp_kmp3: omp_kmp
+testfile_omp_kmp3: omp_kmp
 	./$< 4 $(TESTFILE) $(TEST3)
 
-test_omp_kmp4: omp_kmp
+testfile_omp_kmp4: omp_kmp
 	./$< 4 $(TESTFILE) $(TEST4)
 

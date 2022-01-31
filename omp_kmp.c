@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <omp.h>
 #include "kmp_search.h"
 #include "overlapped_read.h"
 
@@ -71,6 +72,9 @@ int main (int argc, char** argv)
     return -1;
   }
 
+  // Start search.
+  double start = omp_get_wtime();
+
   // Iteratively read from stream.
   index = 0;
   # pragma omp parallel num_threads(thread_count) \
@@ -109,6 +113,10 @@ int main (int argc, char** argv)
     }
   }
 
+  // Search finished.
+  double end = omp_get_wtime();
+
+
   // Print results.
   if (final_i == -1) 
   {
@@ -118,6 +126,7 @@ int main (int argc, char** argv)
   {
     printf("\nPattern %s found at index: %d.\n", patterns[final_j], final_i);
   }
+  printf("\nTime spent searching: %f sec.\n", end - start);
   
   // Clean.
   close(fd);

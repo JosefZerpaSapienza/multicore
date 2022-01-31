@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <time.h>
 #include "kmp_search.h"
 
 #define USAGE "\n USAGE: ./a.out [file.txt] [pattern1] [pattern2] ...\
@@ -55,6 +56,11 @@ int main (int argc, char** argv)
     perror("\nError opening file.\n");
     return -1;
   }
+  
+  // Start search.
+  struct timespec begin, end;
+  clock_gettime(CLOCK_REALTIME, &begin);
+
 
   // Iteratively read from stream.
   for(iteration = 0; \
@@ -64,12 +70,19 @@ int main (int argc, char** argv)
     // Apply search for each pattern.
     for (j = 0; (index == -1) && (j < n_patterns); j++) 
     {
+	    int zero = 0;
       KMPsearch(patterns[j], lengths[j], \
 	text_buffer, text_buffer_size, lps[j], &(status[j]), &index);
     }
   }
   iteration--;
   j--;
+
+  // End search.
+  clock_gettime(CLOCK_REALTIME, &end);
+  long seconds = end.tv_sec - begin.tv_sec;
+  long nanoseconds = end.tv_nsec - begin.tv_nsec;
+  double elapsed = seconds + nanoseconds*1e-9;
 
   // Check error reading file
   if (c == -1) {
@@ -83,10 +96,10 @@ int main (int argc, char** argv)
   } 
   else 
   {
-    printf("local_index: %d  iteration: %d \n", index, iteration);
     index = index + text_buffer_size * iteration;
     printf("\nPattern %s found at index: %d.\n", patterns[j], index);
   }
+  printf("\nTime spent searching: %f sec.\n", elapsed);
   
   // Clean.
   close(fd);

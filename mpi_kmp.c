@@ -71,6 +71,9 @@ int main (int argc, char** argv)
       perror("\nError opening file.\n");
       return -1;
     }
+
+    // Start search
+    double start = MPI_Wtime();
  
     // Iteratively read from stream.
     while(index == -1 && c > 0) 
@@ -101,6 +104,8 @@ int main (int argc, char** argv)
     }
 
     //Search finished.
+    double end = MPI_Wtime();
+
 
     // Check error reading file
     if (c == -1) {
@@ -118,6 +123,7 @@ int main (int argc, char** argv)
 	      - ((text_buffer_size - (max_length - 1)) * ((send_rank - 1) - recv_rank));
       printf("\nPattern %s found at index: %d.\n", patterns[j], g_index + index);
     }
+    printf("\nTime spent searching: %f sec.\n", end - start);
  
     close(fd);
   }
